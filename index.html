@@ -4,7 +4,7 @@
 	<meta name="author" content="1e1001" />
 	<meta name="description" content="Every IEEE-754 binary32 float in a single web page" />
 	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0,minimum-scale=0" />
+	<meta name="viewport" content="width=device-width,initial-scale=1.0" />
 	<title>Every Float</title>
 	<style>
 body {
@@ -297,7 +297,7 @@ function up_resize() {
 }
 function goto_pos(x, y) {
 	e_about.style.display = null;
-	window.scrollTo((measure + 10) * (x + 1) - window.innerWidth / 2, 31 * y + 15.5 - window.innerHeight / 2);
+	window.scrollTo((measure + 10) * (x + 1) - window.outerWidth / 2, 31 * y + 15.5 - window.outerHeight / 2);
 	up_scroll();
 	const item = el_rows[y - pos_y][1][x - pos_x];
 	item.focus();
