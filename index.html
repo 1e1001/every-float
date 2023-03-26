@@ -4,7 +4,7 @@
 	<meta name="author" content="1e1001" />
 	<meta name="description" content="Every IEEE-754 binary32 float in a single web page" />
 	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=0.8" />
 	<title>Every Float</title>
 	<style>
 body {
@@ -66,11 +66,16 @@ body {
 	height: 22px;
 	background-color: white;
 }
-#measure {
+#measure, #measure2 {
 	display: initial !important;
 	visibility: hidden;
 	position: fixed;
 	z-index: -4;
+	/* background-color: pink; */
+}
+#measure2 {
+	width: 100vw;
+	height: 100vh;
 }
 #btn {
 	all: initial;
@@ -133,7 +138,7 @@ h1 {
 	</style>
 </head>
 <body>
-	<span id="measure" style="display:none;">This text needs to be here.</span>
+	<span id="measure" style="display:none;">This text needs to be here</span>
 	<div id="root" style="--w:0px;--x:0;--y:0">
 		<div class="row" id="row">
 			<div class="col col-f" id="col">
@@ -288,16 +293,17 @@ function up_measure() {
 	const new_measure = e_measure.getBoundingClientRect().width;
 	if (new_measure !== measure)
 		e_root.style.setProperty("--w", (measure = new_measure + 1) + "px");
+	pos_w = Math.ceil(3 * window.innerWidth / (measure + 10));
+	pos_h = Math.ceil(3 * window.innerHeight / 31);
 }
 function up_resize() {
 	up_measure();
-	pos_w = Math.ceil(3 * window.innerWidth / (measure + 10));
-	pos_h = Math.ceil(3 * window.innerHeight / 31);
 	up_scroll();
 }
 function goto_pos(x, y) {
 	e_about.style.display = null;
-	window.scrollTo((measure + 10) * (x + 1) - window.outerWidth / 2, 31 * y + 15.5 - window.outerHeight / 2);
+	up_measure();
+	window.scrollTo((measure + 10) * (x + 1) - window.innerWidth / 2, 31 * y + 15.5 - window.innerHeight / 2);
 	up_scroll();
 	const item = el_rows[y - pos_y][1][x - pos_x];
 	item.focus();
@@ -344,8 +350,7 @@ window.onkeydown = function(e) {
 			break;
 	}
 };
-window.onscroll = up_scroll;
-window.onresize = window.onload = up_resize;
+window.onscroll = window.onresize = window.onload = up_resize;
 	</script>
 </body>
 </html>
