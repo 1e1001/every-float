@@ -303,7 +303,7 @@ function up_resize() {
 function goto_pos(x, y) {
 	e_about.style.display = null;
 	up_measure();
-	window.scrollTo((measure + 10) * (x + 1) - window.innerWidth / 2, 31 * y + 15.5 - window.innerHeight / 2);
+	window.scrollTo((measure + 10) * (x + 0.5) - window.innerWidth / 2, 31 * y + 15.5 - window.innerHeight / 2);
 	up_scroll();
 	const item = el_rows[y - pos_y][1][x - pos_x];
 	item.focus();
