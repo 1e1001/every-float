@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Every Float</title>
+	<style>
+body {
+	font-family: monospace;
+	font-size: 15px;
+	line-height: 21px;
+	position: relative;
+	z-index: -3;
+	margin: 0;
+}
+#root {
+	position: relative;
+	z-index: -3;
+	display: flex;
+	flex-direction: column;
+	width: calc((var(--w) + 10px) * (1769484 / 27));
+	height: calc(2031627px);
+	text-align: center;
+}
+.row {
+	display: flex;
+	flex-direction: row;
+	height: 31px;
+	z-index: -3;
+}
+#row {
+	position: sticky;
+	top: 0;
+	z-index: unset;
+	background-color: white;
+	border-bottom: 1px solid black;
+	width: calc((var(--w) + 10px) * (1769484 / 27) + 1px);
+}
+.col {
+	transform: translate(calc(var(--x) * (var(--w) + 10px)), calc(var(--y) * 31px));
+	width: var(--w);
+	height: 21px;
+	padding: 5px;
+	z-index: -2;
+}
+.col-f {
+	width: calc(var(--w) * 12 / 27);
+	text-align: right;
+	position: sticky;
+	padding-left: 0;
+	left: 0;
+	background-color: white;
+	border-right: 1px solid black;
+	z-index: -1;
+	transform: translateY(calc(var(--y) * 31px));
+}
+#row > .col {
+	transform: translateX(calc(var(--x) * (var(--w) + 10px)));
+}
+#row > #col {
+	z-index: 0;
+	transform: none;
+	border-right: none;
+	height: 22px;
+	background-color: white;
+}
+#measure {
+	display: initial !important;
+	visibility: hidden;
+	position: fixed;
+	z-index: -4;
+}
+#btn {
+	all: initial;
+	display: initial !important;
+}
+#btn, button {
+	border: none;
+	background: none;
+	padding: unset;
+	font-family: monospace;
+	font-size: 15px;
+	line-height: 21px;
+	text-decoration: underline;
+	cursor: pointer;
+}
+#btn:focus, button:focus, .col:focus {
+	outline: black auto 1px;
+	outline: -webkit-focus-ring-color auto 1px;
+	outline-offset: 1px;
+}
+.oob {
+	display: none;
+}
+#about {
+	all: initial;
+	font-family: monospace;
+	font-size: 15px;
+	line-height: 21px;
+	position: fixed;
+	background-color: white;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	padding: 10px 5px 0 10px;
+}
+#about.about {
+	display: none;
+	border: 1px solid black;
+	top: 31px;
+	left: calc(var(--w) * 12 / 27 + 5px);
+	right: unset;
+	bottom: unset;
+}
+kbd {
+	border: 1px solid black;
+	padding: 0 5px;
+}
+li {
+	margin-bottom: 2px;
+}
+@media screen and (min-width: 600px) {
+	#about.about {
+		max-width: 600px;
+	}
+}
+h1 {
+	line-height: 0;
+}
+	</style>
+</head>
+<body>
+	<span id="measure" style="display:none;">This text needs to be here.</span>
+	<div id="root" style="--w:0px;--x:0;--y:0">
+		<div class="row" id="row">
+			<div class="col col-f" id="col">
+				<button id="btn" style="display:none">Every Float</button>
+				<div id="about" tabindex="-1">
+					<h1>Every Float</h1>
+					<p>By 1e1001</p>
+					<noscript><p>You need javascript to actually see the floats :(</p></noscript>
+					<p>Every IEEE-754 binary32 float in a single web page, because I wanted to try messing around with an &ldquo;infinite&rdquo; scrolling setup.</p>
+					<p>Not binary64 because unfortunately there&rsquo;s a limit to how large an element can be, so I can&rsquo;t make a 2&sup3;&sup2; &times; 2&sup3;&sup2; entry long page. That&rsquo;s also why even this a two-dimensional table instead of a long list.</p>
+					<span id="js-info" style="display:none">
+						<p>Locate a float by it&rsquo;s <button id="find-val">value</button> or <button id="find-pos">position</button>.</p>
+						<p style="margin-bottom:0;">Keyboard shortcuts:</p>
+						<ul style="margin-top:0;list-style:none;">
+							<li><kbd>V</kbd> find by value</li>
+							<li><kbd>P</kbd> find by position</li>
+							<li><kbd>?</kbd> toggle this menu</li>
+						</ul>
+					</span>
+					<p>Source code is <a href="https://github.com/1e1001/every-float" target="_blank" rel="noopener noreferrer">available here</a>, enjoy the horrors that lie within!</p>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script>
+const e_measure = document.getElementById("measure");
+const e_root = document.getElementById("root");
+const e_about = document.getElementById("about");
+let measure = 1000;
+const e_row_first = document.getElementById("row");
+let el_row_first = [];
+let el_rows = [];
+let pos_x = 0, pos_y = 0, pos_w = 0, pos_h = 0, old_w = 0;
+const trans_buf = new ArrayBuffer(4);
+const trans_f32 = new Float32Array(trans_buf);
+const trans_u32 = new Uint32Array(trans_buf);
+function format_float(x, y) {
+	if (x < 0 || y < 0)
+		return "\xA0";
+	const idx = y * 65536 + x;
+	if (idx === 0x80000000)
+		return "-0";
+	trans_u32[0] = idx;
+	let res = trans_f32[0].toPrecision(21);
+	if (res.indexOf(".") > -1 && res.indexOf("e") === -1) {
+		while (res.slice(-1) === "0")
+			res = res.slice(0, -1);
+		if (res.slice(-1) === ".")
+			res = res.slice(0, -1);
+	}
+	return res;
+}
+function format_int(x, y) {
+	return "0x" + (y * 65536 + x).toString(16).padStart(8, "0");
+}
+function format_edge(side, pos) {
+	if (pos < 0)
+		return "\xA0";
+	let res = "0x";
+	if (side == "x")
+		res += "----";
+	res += pos.toString(16).padStart(4, "0");
+	if (side == "y")
+		res += "----";
+	return res;
+}
+function up_scroll() {
+	const new_x = Math.floor(window.scrollX / (measure + 10) - pos_w / 3);
+	const new_y = Math.floor(window.scrollY / 31 - pos_h / 3);
+	if (pos_h !== el_rows.length || pos_w !== old_w
+		|| new_x + pos_w <= pos_x || new_x >= pos_x + pos_w
+		|| new_y + pos_h <= pos_y || new_y >= pos_y + pos_h) {
+		old_w = pos_w;
+		for (let i = 0; i < el_row_first.length; ++i)
+			el_row_first[i].remove();
+		for (let i = 0; i < el_rows.length; ++i)
+			el_rows[i][0].remove();
+		el_row_first = [];
+		el_rows = [];
+		for (let y = 0; y < pos_h; ++y) {
+			let row = document.createElement("div");
+			row.classList.add("row");
+			let col_f = document.createElement("div");
+			col_f.classList.add("col", "col-f");
+			col_f.innerText = format_edge("y", y + new_y);
+			row.append(col_f);
+			let cols = [];
+			for (let x = 0; x < pos_w; ++x) {
+				let col = document.createElement("div");
+				col.classList.add("col");
+				col.title = format_int(x + new_x, y + new_y);
+				col.innerText = format_float(x + new_x, y + new_y);
+				col.tabIndex = -1;
+				if (x + new_x >= 65536)
+					col.classList.add("oob");
+				row.append(col);
+				cols.push(col);
+			}
+			if (y + new_y >= 65536)
+				row.classList.add("oob");
+			e_root.append(row);
+			el_rows.push([row, cols]);
+		}
+		for (let x = 0; x < pos_w; ++x) {
+			let col = document.createElement("div");
+			col.classList.add("col");
+			col.innerText = format_edge("x", x + new_x);
+			if (x + new_x >= 65536)
+				col.classList.add("oob");
+			row.append(col);
+			el_row_first.push(col);
+		}
+		pos_x = new_x, pos_y = new_y;
+		old_w = pos_w;
+	} else if (new_x !== pos_x || new_y !== pos_y) {
+		if (document.activeElement.classList.contains("col"))
+			document.activeElement.blur();
+		for (let y = 0; y < pos_h; ++y) {
+			const ent = el_rows[y];
+			const row = ent[1];
+			if (new_y > pos_y) {
+				if (y + new_y >= 65536)
+					ent[0].classList.add("oob");
+			} else {
+				if (y + new_y < 65536)
+					ent[0].classList.remove("oob");
+			}
+			ent[0].firstChild.innerText = format_edge("y", y + new_y);
+			for (let x = 0; x < pos_w; ++x) {
+				const col = row[x];
+				col.title = format_int(x + new_x, y + new_y);
+				col.innerText = format_float(x + new_x, y + new_y);
+			}
+			if (new_x > pos_x) {
+				for (let x = 0; x < pos_w; ++x)
+					if (x + new_x >= 65536)
+						row[x].classList.add("oob");
+			} else {
+				for (let x = 0; x < pos_w; ++x)
+					if (x + new_x < 65536)
+						row[x].classList.remove("oob");
+			}
+		}
+		for (let x = 0; x < pos_w; ++x)
+			el_row_first[x].innerText = format_edge("x", x + new_x);
+		pos_x = new_x, pos_y = new_y;
+	}
+	e_root.style.setProperty("--x", pos_x);
+	e_root.style.setProperty("--y", pos_y);
+}
+function up_measure() {
+	const new_measure = e_measure.getBoundingClientRect().width;
+	if (new_measure !== measure)
+		e_root.style.setProperty("--w", (measure = new_measure + 1) + "px");
+}
+function up_resize() {
+	up_measure();
+	pos_w = Math.ceil(3 * window.innerWidth / (measure + 10));
+	pos_h = Math.ceil(3 * window.innerHeight / 31);
+	up_scroll();
+}
+function goto_pos(x, y) {
+	e_about.style.display = null;
+	window.scrollTo((measure + 10) * (x + 1) - window.innerWidth / 2, 31 * y + 15.5 - window.innerHeight / 2);
+	up_scroll();
+	const item = el_rows[y - pos_y][1][x - pos_x];
+	item.focus();
+}
+function btn_about() {
+	e_about.style.display = e_about.style.display === "block" ? null : "block";
+}
+function btn_value() {
+	let res = prompt("Value?");
+	if (res === null)
+		return;
+	res = parseFloat(res);
+	if (isNaN(res))
+		return alert("Invalid value");
+	e_about.style.display = null;
+	trans_f32[0] = res;
+	res = trans_u32[0];
+	goto_pos(res % 65536, Math.floor(res / 65536));
+}
+function btn_position() {
+	let res = prompt("Position? (allows leading 0x/0b/0o)");
+	if (res === null)
+		return;
+	res = parseInt(res);
+	if (isNaN(res) || res < 0 || res >= 4294967296)
+		return alert("Invalid position");
+	goto_pos(res % 65536, Math.floor(res / 65536));
+};
+e_about.className = "about";
+document.getElementById("js-info").style.display = null;
+document.getElementById("btn").onclick = btn_about;
+document.getElementById("find-val").onclick = btn_value;
+document.getElementById("find-pos").onclick = btn_position;
+window.onkeydown = function(e) {
+	switch (e.key) {
+		case "v": case "V":
+			btn_value();
+			break;
+		case "p": case "P":
+			btn_position();
+			break;
+		case "/": case "?":
+			btn_about();
+			break;
+	}
+};
+window.onscroll = up_scroll;
+window.onresize = window.onload = up_resize;
+	</script>
+</body>
+</html>
