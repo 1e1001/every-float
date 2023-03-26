@@ -282,8 +282,17 @@ function up_scroll() {
 						row[x].classList.remove("oob");
 			}
 		}
-		for (let x = 0; x < pos_w; ++x)
-			el_row_first[x].innerText = format_edge("x", x + new_x);
+		for (let x = 0; x < pos_w; ++x) {
+			const ent = el_row_first[x];
+			ent.innerText = format_edge("x", x + new_x);
+			if (new_x > pos_x) {
+				if (x + new_x >= 65536)
+					ent.classList.add("oob");
+			} else {
+				if (x + new_x < 65536)
+					ent.classList.remove("oob");
+			}
+		}
 		pos_x = new_x, pos_y = new_y;
 	}
 	e_root.style.setProperty("--x", pos_x);
