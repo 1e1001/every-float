@@ -20,8 +20,8 @@ body {
 	z-index: -3;
 	display: flex;
 	flex-direction: column;
-	width: calc((var(--w) + 10px) * (1769484 / 27));
-	height: calc(2031627px);
+	width: calc((var(--w) + 10px) * (917516 / 28) + 20px);
+	height: 4063274px;
 	text-align: center;
 }
 .row {
@@ -36,7 +36,7 @@ body {
 	z-index: unset;
 	background-color: white;
 	border-bottom: 1px solid black;
-	width: calc((var(--w) + 10px) * (1769484 / 27) + 1px);
+	width: calc((var(--w) + 10px) * (917516 / 28) + 21px);
 }
 .col {
 	transform: translate(calc(var(--x) * (var(--w) + 10px)), calc(var(--y) * 31px));
@@ -46,8 +46,9 @@ body {
 	z-index: -2;
 }
 .col-f {
-	width: calc(var(--w) * 12 / 27);
+	width: calc(var(--w) * 12 / 28);
 	text-align: right;
+	height: 31px;
 	position: sticky;
 	padding-left: 0;
 	left: 0;
@@ -89,6 +90,7 @@ body {
 	font-size: 15px;
 	line-height: 21px;
 	text-decoration: underline;
+	font-style: italic;
 	cursor: pointer;
 }
 #btn:focus, button:focus, .col:focus {
@@ -116,7 +118,7 @@ body {
 	display: none;
 	border: 1px solid black;
 	top: 31px;
-	left: calc(var(--w) * 12 / 27 + 5px);
+	left: calc(var(--w) * 12 / 28 + 5px);
 	right: unset;
 	bottom: unset;
 }
@@ -138,17 +140,17 @@ h1 {
 	</style>
 </head>
 <body>
-	<span id="measure" style="display:none;">This text needs to be here.</span>
+	<span id="measure" style="display:none;">This text needs to be here!!</span>
 	<div id="root" style="--w:0px;--x:0;--y:0">
 		<div class="row" id="row">
 			<div class="col col-f" id="col">
 				<button id="btn" style="display:none">Every Float</button>
 				<div id="about" tabindex="-1">
 					<h1>Every Float</h1>
-					<p>By 1e1001</p>
+					<p>By <a href="https://1e1001.github.io/">1e1001</a></p>
 					<noscript><p>You need javascript to actually see the floats :(</p></noscript>
 					<p>Every IEEE-754 binary32 float in a single web page, because I wanted to try messing around with an &ldquo;infinite&rdquo; scrolling setup.</p>
-					<p>Not binary64 because unfortunately there&rsquo;s a limit to how large an element can be, so I can&rsquo;t make a 2&sup3;&sup2; &times; 2&sup3;&sup2; entry long page. That&rsquo;s also why even this a two-dimensional table instead of a long list.</p>
+					<p>Not binary64 because unfortunately there&rsquo;s a limit to how large an element can be, so I can&rsquo;t make a 2&sup3;&sup2; &times; 2&sup3;&sup2; entry long page. That&rsquo;s also why even this a two-dimensional table instead of a long list, and also not a square of entries.</p>
 					<span id="js-info" style="display:none">
 						<p>Locate a float by it&rsquo;s <button id="find-val">value</button> or <button id="find-pos">position</button>.</p>
 						<p style="margin-bottom:0;">Keyboard shortcuts:</p>
@@ -158,7 +160,7 @@ h1 {
 							<li><kbd>?</kbd> toggle this menu</li>
 						</ul>
 					</span>
-					<p>Source code is <a href="https://github.com/1e1001/every-float" target="_blank" rel="noopener noreferrer">available here</a>, enjoy the horrors that lie within!</p>
+					<p>Source code is <a href="https://github.com/1e1001/every-float" rel="noopener noreferrer">available here</a>, enjoy the horrors that lie within!</p>
 				</div>
 			</div>
 		</div>
@@ -178,7 +180,7 @@ const trans_u32 = new Uint32Array(trans_buf);
 function format_float(x, y) {
 	if (x < 0 || y < 0)
 		return "\xA0";
-	const idx = y * 65536 + x;
+	const idx = y * 32768 + x;
 	if (idx === 0x80000000)
 		return "-0";
 	trans_u32[0] = idx;
@@ -192,18 +194,15 @@ function format_float(x, y) {
 	return res;
 }
 function format_int(x, y) {
-	return "0x" + (y * 65536 + x).toString(16).padStart(8, "0");
+	return "0x" + (y * 32768 + x).toString(16).padStart(8, "0");
 }
 function format_edge(side, pos) {
 	if (pos < 0)
 		return "\xA0";
-	let res = "0x";
 	if (side == "x")
-		res += "----";
-	res += pos.toString(16).padStart(4, "0");
+		return "0x----" + pos.toString(16).padStart(4, "0");
 	if (side == "y")
-		res += "----";
-	return res;
+		return "0x" + (pos * 8).toString(16).padStart(5, "0") + "---";
 }
 function up_scroll() {
 	const new_x = Math.floor(window.scrollX / (measure + 10) - pos_w / 3);
@@ -232,12 +231,12 @@ function up_scroll() {
 				col.title = format_int(x + new_x, y + new_y);
 				col.innerText = format_float(x + new_x, y + new_y);
 				col.tabIndex = -1;
-				if (x + new_x >= 65536)
+				if (x + new_x >= 32768)
 					col.classList.add("oob");
 				row.append(col);
 				cols.push(col);
 			}
-			if (y + new_y >= 65536)
+			if (y + new_y >= 131072)
 				row.classList.add("oob");
 			e_root.append(row);
 			el_rows.push([row, cols]);
@@ -246,7 +245,7 @@ function up_scroll() {
 			let col = document.createElement("div");
 			col.classList.add("col");
 			col.innerText = format_edge("x", x + new_x);
-			if (x + new_x >= 65536)
+			if (x + new_x >= 32768)
 				col.classList.add("oob");
 			row.append(col);
 			el_row_first.push(col);
@@ -260,10 +259,10 @@ function up_scroll() {
 			const ent = el_rows[y];
 			const row = ent[1];
 			if (new_y > pos_y) {
-				if (y + new_y >= 65536)
+				if (y + new_y >= 131072)
 					ent[0].classList.add("oob");
 			} else {
-				if (y + new_y < 65536)
+				if (y + new_y < 131072)
 					ent[0].classList.remove("oob");
 			}
 			ent[0].firstChild.innerText = format_edge("y", y + new_y);
@@ -274,11 +273,11 @@ function up_scroll() {
 			}
 			if (new_x > pos_x) {
 				for (let x = 0; x < pos_w; ++x)
-					if (x + new_x >= 65536)
+					if (x + new_x >= 32768)
 						row[x].classList.add("oob");
 			} else {
 				for (let x = 0; x < pos_w; ++x)
-					if (x + new_x < 65536)
+					if (x + new_x < 32768)
 						row[x].classList.remove("oob");
 			}
 		}
@@ -286,10 +285,10 @@ function up_scroll() {
 			const ent = el_row_first[x];
 			ent.innerText = format_edge("x", x + new_x);
 			if (new_x > pos_x) {
-				if (x + new_x >= 65536)
+				if (x + new_x >= 32768)
 					ent.classList.add("oob");
 			} else {
-				if (x + new_x < 65536)
+				if (x + new_x < 32768)
 					ent.classList.remove("oob");
 			}
 		}
@@ -332,7 +331,7 @@ function btn_value() {
 	e_about.style.display = null;
 	trans_f32[0] = res;
 	res = trans_u32[0];
-	goto_pos(res % 65536, Math.floor(res / 65536));
+	goto_pos(res % 32768, Math.floor(res / 32768));
 }
 function btn_position() {
 	let res = prompt("Position? (allows leading 0x/0b/0o)");
@@ -341,7 +340,7 @@ function btn_position() {
 	res = parseInt(res);
 	if (isNaN(res) || res < 0 || res >= 4294967296)
 		return alert("Invalid position");
-	goto_pos(res % 65536, Math.floor(res / 65536));
+	goto_pos(res % 32768, Math.floor(res / 32768));
 };
 e_about.className = "about";
 document.getElementById("js-info").style.display = null;
@@ -351,13 +350,16 @@ document.getElementById("find-pos").onclick = btn_position;
 window.onkeydown = function(e) {
 	switch (e.key) {
 		case "v": case "V":
+			e.preventDefault();
 			btn_value();
 			break;
 		case "p": case "P":
 			btn_position();
+			e.preventDefault();
 			break;
 		case "/": case "?":
 			btn_about();
+			e.preventDefault();
 			break;
 	}
 };
