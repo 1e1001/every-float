@@ -170,6 +170,7 @@ const e_measure = document.getElementById("measure");
 const e_root = document.getElementById("root");
 const e_about = document.getElementById("about");
 let measure = 1000;
+let hash_cancel = 0;
 const e_row_first = document.getElementById("row");
 let el_row_first = [];
 let el_rows = [];
@@ -181,8 +182,8 @@ function format_float(x, y) {
 	if (x < 0 || y < 0)
 		return "\xA0";
 	const idx = y * 32768 + x;
-	if (idx === 0x80000000)
-		return "-0";
+	if (idx >= 0x80000000)
+		return "-" + format_float(x, y - 65536);
 	trans_u32[0] = idx;
 	let res = trans_f32[0].toPrecision(21);
 	if (res.indexOf(".") > -1 && res.indexOf("e") === -1) {
@@ -231,6 +232,11 @@ function up_scroll() {
 				col.title = format_int(x + new_x, y + new_y);
 				col.innerText = format_float(x + new_x, y + new_y);
 				col.tabIndex = -1;
+				col.setAttribute("data-pos", ((y + new_y) * 32768 + (x + new_x)).toString(16).padStart(8, "0"));
+				col.onclick = function() {
+					++hash_cancel;
+					location.hash = "#" + this.getAttribute("data-pos");
+				}
 				if (x + new_x >= 32768)
 					col.classList.add("oob");
 				row.append(col);
@@ -270,6 +276,7 @@ function up_scroll() {
 				const col = row[x];
 				col.title = format_int(x + new_x, y + new_y);
 				col.innerText = format_float(x + new_x, y + new_y);
+				col.setAttribute("data-pos", ((y + new_y) * 32768 + (x + new_x)).toString(16).padStart(8, "0"));
 			}
 			if (new_x > pos_x) {
 				for (let x = 0; x < pos_w; ++x)
@@ -331,7 +338,7 @@ function btn_value() {
 	e_about.style.display = null;
 	trans_f32[0] = res;
 	res = trans_u32[0];
-	goto_pos(res % 32768, Math.floor(res / 32768));
+	location.hash = "#" + res.toString(16).padStart(8, "0");
 }
 function btn_position() {
 	let res = prompt("Position? (allows leading 0x/0b/0o)");
@@ -340,13 +347,22 @@ function btn_position() {
 	res = parseInt(res);
 	if (isNaN(res) || res < 0 || res >= 4294967296)
 		return alert("Invalid position");
-	goto_pos(res % 32768, Math.floor(res / 32768));
+	location.hash = "#" + res.toString(16).padStart(8, "0");
 };
 e_about.className = "about";
 document.getElementById("js-info").style.display = null;
 document.getElementById("btn").onclick = btn_about;
 document.getElementById("find-val").onclick = btn_value;
 document.getElementById("find-pos").onclick = btn_position;
+window.onhashchange = function(e) {
+	if (hash_cancel > 0) {
+		--hash_cancel;
+	} else {
+		let pos = parseInt(new URL(e.newURL).hash.slice(1), 16);
+		goto_pos(pos % 32768, Math.floor(pos / 32768));
+	}
+}
+window.onhashchange({ newURL: location.href });
 window.onkeydown = function(e) {
 	switch (e.key) {
 		case "v": case "V":
